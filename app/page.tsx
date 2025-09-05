@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { SimplePasswordLogin } from "@/components/auth/simple-password-login"
@@ -12,14 +12,7 @@ import { ReportsDashboard } from "@/components/reports/reports-dashboard"
 import { SettingsDashboard } from "@/components/settings/settings-dashboard"
 import { TicketholdersList } from "@/components/ticketholders/ticketholders-list"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Ticket, FileText, MessageSquare, Users, ChevronDown, User, Shield, Eye, LogOut } from "lucide-react"
+import { Ticket, FileText, Users, ChevronDown, User, Shield, Eye, LogOut } from "lucide-react"
 import { TicketholderDropdownItems } from "@/components/ticketholders/ticketholder-dropdown-items"
 
 type MainView = "events" | "reports" | "ticketholders" | "requests" | "settings"
@@ -28,14 +21,9 @@ function AuthPage() {
   const [mainView, setMainView] = useState<MainView>("events")
   const [isPublicView, setIsPublicView] = useState(false)
   const [showSessionProfile, setShowSessionProfile] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const { user, isAuthenticated, logout, userType } = useAuth()
   const { workspace, isSetup, loading: workspaceLoading } = useWorkspace()
-
-  useEffect(() => {
-    console.log("[v0] Dropdown open state:", isPublicView)
-    console.log("[v0] User type:", userType)
-    console.log("[v0] User data:", user)
-  }, [isPublicView, userType, user])
 
   if (workspaceLoading) {
     return (
@@ -107,9 +95,9 @@ function AuthPage() {
                   </div>
                 )}
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-2 rounded-full px-3 py-2 min-w-0">
+                <div className="relative">
+                  <details className="group">
+                    <summary className="flex items-center space-x-2 rounded-full px-3 py-2 min-w-0 cursor-pointer hover:bg-slate-100 list-none">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                         <User className="w-4 h-4 text-white" />
                       </div>
@@ -125,50 +113,59 @@ function AuthPage() {
                           {userType === "admin" ? "Administrator" : "Public User"}
                         </p>
                       </div>
-                      <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {userType === "public" && (
-                      <>
-                        <div className="px-2 py-1.5 text-sm font-medium text-slate-600">Select Identity:</div>
-                        <TicketholderDropdownItems />
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    {userType === "admin" && (
-                      <>
-                        <DropdownMenuItem onClick={() => setMainView("requests")}>
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          My Requests
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setMainView("settings")}>
-                          <User className="w-4 h-4 mr-2" />
-                          Profile Settings
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setMainView("settings")}>
-                          <Shield className="w-4 h-4 mr-2" />
-                          Admin Settings
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setIsPublicView(!isPublicView)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          {isPublicView ? "Switch to Admin View" : "Switch to Public View"}
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    {userType === "public" && (
-                      <DropdownMenuItem onClick={() => setShowSessionProfile(true)}>
-                        <User className="w-4 h-4 mr-2" />
-                        Update Profile
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout} className="text-red-600">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0 group-open:rotate-180 transition-transform" />
+                    </summary>
+
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
+                      <div className="py-1">
+                        {userType === "public" && (
+                          <>
+                            <div className="px-4 py-2 text-sm font-medium text-slate-600 border-b">
+                              Select Identity:
+                            </div>
+                            <TicketholderDropdownItems />
+                            <hr className="my-1" />
+                          </>
+                        )}
+                        {userType === "admin" && (
+                          <>
+                            <button
+                              onClick={() => setMainView("settings")}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 flex items-center"
+                            >
+                              <Shield className="w-4 h-4 mr-2" />
+                              Admin Settings
+                            </button>
+                            <button
+                              onClick={() => setIsPublicView(!isPublicView)}
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 flex items-center"
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              {isPublicView ? "Switch to Admin View" : "Switch to Public View"}
+                            </button>
+                          </>
+                        )}
+                        {userType === "public" && (
+                          <button
+                            onClick={() => setShowSessionProfile(true)}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 flex items-center"
+                          >
+                            <User className="w-4 h-4 mr-2" />
+                            Update Profile
+                          </button>
+                        )}
+                        <hr className="my-1" />
+                        <button
+                          onClick={logout}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 flex items-center text-red-600"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
           </div>

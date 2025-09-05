@@ -1,5 +1,97 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getWorkspaceByPassword, createWorkspace, updateWorkspace } from "@/lib/database"
+import { neon } from "@neondatabase/serverless"
+
+let sql: any = null
+
+function initializeDatabase() {
+  if (!sql) {
+    console.log("[v0] API Route - Initializing database connection")
+    console.log("[v0] API Route - DATABASE_URL available:", !!process.env.DATABASE_URL)
+    console.log("[v0] API Route - DATABASE_URL length:", process.env.DATABASE_URL?.length || 0)
+
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL environment variable is not set")
+    }
+
+    try {
+      sql = neon(process.env.DATABASE_URL)
+      console.log("[v0] API Route - Database connection established successfully")
+    } catch (error) {
+      console.error("[v0] API Route - Failed to initialize database:", error)
+      throw error
+    }
+  }
+  return sql
+}
+
+async function getWorkspaceByPassword(password: string) {
+  const db = initializeDatabase()
+  const result = await db`
+    SELECT w.*, 
+           json_agg(
+             json_build_object(
+               'id', t.id,
+               'name', t.name,
+               'color', t.color,
+               'seatTypes', t.seat_types
+             )
+           ) as teams
+    FROM workspaces w
+    LEFT JOIN (
+      SELECT t.*, 
+             json_agg(
+               json_build_object(
+                 'id', st.id,
+                 'name', st.name,
+                 'value', st.value
+               )
+             ) as seat_types
+      FROM teams t
+      LEFT JOIN seat_types st ON t.id = st.team_id
+      GROUP BY t.id, t.name, t.color, t.workspace_id, t.created_at
+    ) t ON w.id = t.workspace_id
+    WHERE w.password = ${password}
+    GROUP BY w.id, w.name, w.password, w.created_at, w.updated_at
+  `
+  return result[0] || null
+}
+
+async function createWorkspace(data: any) {
+  const db = initializeDatabase()
+  const workspaceResult = await db`
+    INSERT INTO workspaces (id, name, password, created_at, updated_at)
+    VALUES (${data.id}, ${data.name}, ${data.password}, NOW(), NOW())
+    RETURNING *
+  `
+
+  // Create teams and seat types
+  for (const team of data.teams || []) {
+    const teamResult = await db`
+      INSERT INTO teams (id, name, color, workspace_id, created_at)
+      VALUES (${team.id}, ${team.name}, ${team.color}, ${data.id}, NOW())
+      RETURNING *
+    `
+
+    for (const seatType of team.seatTypes || []) {
+      await db`
+        INSERT INTO seat_types (id, name, value, team_id, created_at)
+        VALUES (${seatType.id}, ${seatType.name}, ${seatType.value}, ${team.id}, NOW())
+      `
+    }
+  }
+
+  return workspaceResult[0]
+}
+
+async function updateWorkspace(id: string, updates: any) {
+  const db = initializeDatabase()
+  return await db`
+    UPDATE workspaces 
+    SET name = ${updates.name}, updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `
+}
 
 export async function GET(request: NextRequest) {
   try {

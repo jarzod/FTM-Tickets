@@ -2,7 +2,6 @@
 
 import { usePeople } from "@/hooks/use-people"
 import { useAuth } from "@/hooks/use-auth"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { User } from "lucide-react"
 
 export function TicketholderDropdownItems() {
@@ -16,14 +15,16 @@ export function TicketholderDropdownItems() {
   return (
     <>
       {people.map((person) => (
-        <DropdownMenuItem
+        <button
           key={person.id}
           onClick={() => handleSelectTicketholder(person)}
-          className={user.selectedTicketholder?.id === person.id ? "bg-slate-100" : ""}
+          className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-100 flex items-center ${
+            user.selectedTicketholder?.id === person.id ? "bg-slate-100" : ""
+          }`}
         >
           <User className="w-4 h-4 mr-2" />
           {person.name} {person.company && `(${person.company})`}
-        </DropdownMenuItem>
+        </button>
       ))}
     </>
   )
