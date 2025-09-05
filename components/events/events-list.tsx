@@ -195,76 +195,68 @@ export function EventsList({ isPublicView = false }: EventsListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm w-full">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm">
           <div className="p-3">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Search events..."
+                    placeholder="Search events, opponents, or assigned people..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 sm:max-w-48">
-                  <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                    <SelectTrigger className="border-slate-200 focus:border-blue-500 focus:ring-blue-500/20">
-                      <SelectValue placeholder="All teams" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Teams</SelectItem>
-                      {enabledTeams.map((team) => (
-                        <SelectItem key={team.id} value={team.id}>
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="w-3 h-3 rounded-full border border-gray-200"
-                              style={{ backgroundColor: team.color }}
-                            />
-                            <span className="truncate">{team.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="showPast"
-                      checked={showPastEvents}
-                      onCheckedChange={(checked) => setShowPastEvents(checked as boolean)}
-                      className="border-slate-300"
-                    />
-                    <Label htmlFor="showPast" className="text-sm text-slate-600 cursor-pointer whitespace-nowrap">
-                      Show past events
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="showMyEvents"
-                      checked={showMyEventsOnly}
-                      onCheckedChange={(checked) => setShowMyEventsOnly(checked as boolean)}
-                      className="border-slate-300"
-                    />
-                    <Label htmlFor="showMyEvents" className="text-sm text-slate-600 cursor-pointer whitespace-nowrap">
-                      My events
-                    </Label>
-                  </div>
-                </div>
+              <div className="sm:w-48">
+                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                  <SelectTrigger className="border-slate-200 focus:border-blue-500 focus:ring-blue-500/20">
+                    <SelectValue placeholder="All teams" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Teams</SelectItem>
+                    {enabledTeams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        <div className="flex items-center space-x-2">
+                          <div
+                            className="w-3 h-3 rounded-full border border-gray-200"
+                            style={{ backgroundColor: team.color }}
+                          />
+                          <span>{team.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 px-2">
+                <Checkbox
+                  id="showPast"
+                  checked={showPastEvents}
+                  onCheckedChange={(checked) => setShowPastEvents(checked as boolean)}
+                  className="border-slate-300"
+                />
+                <Label htmlFor="showPast" className="text-sm text-slate-600 cursor-pointer">
+                  Show past events
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 px-2">
+                <Checkbox
+                  id="showMyEvents"
+                  checked={showMyEventsOnly}
+                  onCheckedChange={(checked) => setShowMyEventsOnly(checked as boolean)}
+                  className="border-slate-300"
+                />
+                <Label htmlFor="showMyEvents" className="text-sm text-slate-600 cursor-pointer">
+                  My events
+                </Label>
               </div>
             </div>
           </div>
         </div>
-        {isAdmin && (
-          <div className="w-full sm:w-auto">
-            <CreateEventDialog />
-          </div>
-        )}
+        {isAdmin && <CreateEventDialog />}
       </div>
 
       <div className="space-y-2">
@@ -286,7 +278,7 @@ export function EventsList({ isPublicView = false }: EventsListProps) {
         ) : (
           filteredEvents.map((event) => {
             const team = getTeamInfo(event.teamId)
-            const stats = getSafeEventStats(event)
+            const stats = getSafeEventStats(event) // Using safe wrapper
             const eventDate = new Date(event.date + "T" + event.time)
             const mountainTime = getMountainTime()
             const eventMountainTime = new Date(
@@ -304,40 +296,40 @@ export function EventsList({ isPublicView = false }: EventsListProps) {
                 }`}
                 onClick={isAdmin ? () => setSelectedEvent(event.id) : undefined}
               >
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-1">
                         {team && (
                           <Badge
                             style={{ backgroundColor: team.color }}
-                            className="text-white border-0 px-3 py-1 rounded-full font-medium text-xs sm:text-sm w-fit"
+                            className="text-white border-0 px-3 py-1 rounded-full font-medium"
                           >
                             {team.name}
                           </Badge>
                         )}
-                        <h3 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">{event.opponent}</h3>
+                        <h3 className="text-lg font-semibold text-slate-900">{event.opponent}</h3>
                         {event.isPlayoff && (
-                          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white border-0 rounded-full w-fit">
+                          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white border-0 rounded-full">
                             <Star className="h-3 w-3 mr-1" />
                             Playoff
                           </Badge>
                         )}
                       </div>
 
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-slate-600 mb-2">
+                      <div className="flex items-center space-x-4 text-sm text-slate-600 mb-1">
                         <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4 flex-shrink-0" />
-                          <span className="truncate">{formatEventDate(event.date)}</span>
+                          <Calendar className="h-4 w-4" />
+                          <span>{formatEventDate(event.date)}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <span>{formatTime(event.time)}</span>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm">
+                      <div className="flex items-center space-x-6 text-sm">
                         <div className="flex items-center space-x-1 text-slate-600">
-                          <Users className="h-4 w-4 text-slate-500 flex-shrink-0" />
+                          <Users className="h-4 w-4 text-slate-500" />
                           <span className={stats.availableTickets > 0 ? "font-bold" : ""}>
                             {stats.availableTickets}/{stats.totalTickets} available
                           </span>
@@ -346,64 +338,54 @@ export function EventsList({ isPublicView = false }: EventsListProps) {
                           const requestDetails = getRequestDetails(event.id)
                           return requestDetails.count > 0 ? (
                             <div className="text-xs text-blue-600">
-                              <span className="font-medium">{requestDetails.count} Requests:</span>{" "}
-                              <span className="truncate">{requestDetails.names.join(", ")}</span>
-                              {requestDetails.count > 3 && <span>, +{requestDetails.count - 3} more</span>}
+                              {requestDetails.count} Requests: {requestDetails.names.join(", ")}
+                              {requestDetails.count > 3 && `, +${requestDetails.count - 3} more`}
                             </div>
                           ) : null
                         })()}
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-start sm:items-end space-y-2 sm:text-right min-w-0">
+                    <div className="text-right flex flex-col items-end space-y-1">
                       {!isPublicView && assignedNames.length > 0 && (
-                        <div className="text-sm text-slate-600 w-full sm:max-w-xs">
+                        <div className="text-sm text-slate-600 max-w-xs">
                           <div className="space-y-1">
-                            {assignedNames.slice(0, 3).map((assignment: any, index: number) => (
-                              <div
-                                key={index}
-                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2"
-                              >
-                                <div className="order-2 sm:order-1">
-                                  <span className="text-slate-500 text-xs bg-slate-100 px-2 py-1 rounded whitespace-nowrap">
+                            {assignedNames.slice(0, 4).map((assignment: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between gap-2">
+                                <div className="text-left">
+                                  <span className="text-slate-500 text-xs bg-slate-100 px-2 py-1 rounded">
                                     {assignment.seat}
                                   </span>
                                 </div>
-                                <div className="order-1 sm:order-2 flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                                    <span className="text-slate-900 font-normal truncate">{assignment.name}</span>
-                                    <span
-                                      className={`text-xs px-1 py-0.5 rounded whitespace-nowrap ${
-                                        assignment.assignmentType === "sold"
-                                          ? "bg-green-100 text-green-700"
-                                          : assignment.assignmentType === "team"
-                                            ? "bg-blue-100 text-blue-700"
-                                            : assignment.assignmentType === "donated"
-                                              ? "bg-purple-100 text-purple-700"
-                                              : assignment.assignmentType === "gifted"
-                                                ? "bg-pink-100 text-pink-700"
-                                                : "bg-gray-100 text-gray-700"
-                                      }`}
-                                    >
-                                      {assignment.assignmentType}
-                                    </span>
-                                  </div>
+                                <div className="text-right flex-1">
+                                  <span className="text-slate-900 font-normal">{assignment.name}</span>
+                                  <span
+                                    className={`ml-1 text-xs px-1 py-0.5 rounded ${
+                                      assignment.assignmentType === "sold"
+                                        ? "bg-green-100 text-green-700"
+                                        : assignment.assignmentType === "team"
+                                          ? "bg-blue-100 text-blue-700"
+                                          : assignment.assignmentType === "donated"
+                                            ? "bg-purple-100 text-purple-700"
+                                            : assignment.assignmentType === "gifted"
+                                              ? "bg-pink-100 text-pink-700"
+                                              : "bg-gray-100 text-gray-700"
+                                    }`}
+                                  >
+                                    {assignment.assignmentType}
+                                  </span>
                                 </div>
                               </div>
                             ))}
-                            {assignedNames.length > 3 && (
+                            {assignedNames.length > 4 && (
                               <div className="text-xs text-slate-500 italic">
-                                +{assignedNames.length - 3} more assigned
+                                +{assignedNames.length - 4} more assigned
                               </div>
                             )}
                           </div>
                         </div>
                       )}
-                      {isPublicView && !isPastEvent && (
-                        <div className="w-full sm:w-auto">
-                          <RequestTicketDialog event={event} />
-                        </div>
-                      )}
+                      {isPublicView && !isPastEvent && <RequestTicketDialog event={event} />}
                     </div>
                   </div>
                 </CardContent>

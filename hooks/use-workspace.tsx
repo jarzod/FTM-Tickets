@@ -15,14 +15,14 @@ interface WorkspaceContextType {
   workspace: Workspace | null
   isSetup: boolean
   loading: boolean
-  createFTM: () => Promise<Workspace>
+  createFTM: () => Workspace
   createCustom: (
     organizationName: string,
     selectedTeams: string[],
     customSeatTypes: Record<string, SeatType[]>,
-  ) => Promise<Workspace>
-  updateWorkspace: (updates: Partial<Workspace>) => Promise<Workspace | null>
-  refreshWorkspace: () => Promise<void>
+  ) => Workspace
+  updateWorkspace: (updates: Partial<Workspace>) => Workspace | null
+  refreshWorkspace: () => void
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined)
@@ -31,119 +31,41 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [workspace, setWorkspaceState] = useState<Workspace | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const refreshWorkspace = async () => {
-    try {
-      const currentWorkspace = getWorkspace()
-
-      if (currentWorkspace) {
-        try {
-          const response = await fetch(`/api/workspace?password=default-password`)
-          const { workspace: dbWorkspace } = await response.json()
-
-          if (!dbWorkspace) {
-            // Create workspace in database if it doesn't exist
-            await fetch("/api/workspace", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                action: "create",
-                id: currentWorkspace.id,
-                name: currentWorkspace.name,
-                password: "default-password",
-              }),
-            })
-          }
-        } catch (error) {
-          console.log("[v0] Database sync failed, using localStorage:", error)
-        }
-      }
-
-      setWorkspaceState(currentWorkspace)
-    } catch (error) {
-      console.error("[v0] Error refreshing workspace:", error)
-      setWorkspaceState(null)
-    }
+  const refreshWorkspace = () => {
+    const currentWorkspace = getWorkspace()
+    setWorkspaceState(currentWorkspace)
   }
 
   useEffect(() => {
-    const initializeWorkspace = async () => {
-      await refreshWorkspace()
-      const currentWorkspace = getWorkspace()
-      if (currentWorkspace) {
-        migrateWorkspaceToNewSeatNames()
-        await refreshWorkspace()
-      }
-      setLoading(false)
+    refreshWorkspace()
+    const currentWorkspace = getWorkspace()
+    if (currentWorkspace) {
+      migrateWorkspaceToNewSeatNames()
+      // Refresh again after migration to get updated data
+      refreshWorkspace()
     }
-
-    initializeWorkspace()
+    setLoading(false)
   }, [])
 
-  const createFTM = async (): Promise<Workspace> => {
+  const createFTM = (): Workspace => {
     const newWorkspace = createFTMWorkspace()
-
-    try {
-      await fetch("/api/workspace", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create",
-          id: newWorkspace.id,
-          name: newWorkspace.name,
-          password: "default-password",
-        }),
-      })
-    } catch (error) {
-      console.log("[v0] Database save failed for FTM workspace:", error)
-    }
-
     setWorkspaceState(newWorkspace)
     return newWorkspace
   }
 
-  const createCustom = async (
+  const createCustom = (
     organizationName: string,
     selectedTeams: string[],
     customSeatTypes: Record<string, SeatType[]>,
-  ): Promise<Workspace> => {
+  ): Workspace => {
     const newWorkspace = createCustomWorkspace(organizationName, selectedTeams, customSeatTypes)
-
-    try {
-      await fetch("/api/workspace", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create",
-          id: newWorkspace.id,
-          name: newWorkspace.organizationName,
-          password: "default-password",
-        }),
-      })
-    } catch (error) {
-      console.log("[v0] Database save failed for custom workspace:", error)
-    }
-
     setWorkspaceState(newWorkspace)
     return newWorkspace
   }
 
-  const updateWorkspaceData = async (updates: Partial<Workspace>): Promise<Workspace | null> => {
+  const updateWorkspaceData = (updates: Partial<Workspace>): Workspace | null => {
     const updated = updateWorkspace(updates)
     if (updated) {
-      try {
-        await fetch("/api/workspace", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "update",
-            id: updated.id,
-            updates: { name: updated.name },
-          }),
-        })
-      } catch (error) {
-        console.log("[v0] Database update failed:", error)
-      }
-
       setWorkspaceState(updated)
     }
     return updated
