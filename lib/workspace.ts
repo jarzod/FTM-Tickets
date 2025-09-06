@@ -120,39 +120,14 @@ export function setWorkspace(workspace: Workspace): void {
   }
 }
 
-// Create FTM workspace
-export function createFTMWorkspace(): Workspace {
+// Create default workspace
+export function createDefaultWorkspace(): Workspace {
   const workspace: Workspace = {
     id: crypto.randomUUID(),
-    name: "FTM Workspace",
-    organizationName: "FTM Ticket Management",
+    name: "Ticket Management System",
+    organizationName: "Ticket Management System",
     type: "ftm",
     teams: DEFAULT_TEAMS.map((team) => ({ ...team, enabled: true })),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-
-  setWorkspace(workspace)
-  initializeDefaultTicketValues()
-  return workspace
-}
-
-// Create custom workspace
-export function createCustomWorkspace(
-  organizationName: string,
-  selectedTeams: string[],
-  customSeatTypes: Record<string, SeatType[]>,
-): Workspace {
-  const workspace: Workspace = {
-    id: crypto.randomUUID(),
-    name: "Custom Workspace",
-    organizationName,
-    type: "custom",
-    teams: DEFAULT_TEAMS.map((team) => ({
-      ...team,
-      enabled: selectedTeams.includes(team.id),
-      seatTypes: customSeatTypes[team.id] || team.seatTypes,
-    })),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
