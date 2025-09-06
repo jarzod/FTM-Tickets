@@ -135,7 +135,27 @@ function AuthPage() {
                     <ChevronDown className="w-4 h-4 text-slate-400" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56" side="bottom" sideOffset={8}>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-white border shadow-lg z-50"
+                  side="bottom"
+                  sideOffset={8}
+                  onOpenAutoFocus={(e) => {
+                    console.log("[v0] Dropdown content opened and focused")
+                  }}
+                  onCloseAutoFocus={(e) => {
+                    console.log("[v0] Dropdown content closed")
+                  }}
+                  style={{
+                    backgroundColor: "white",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                    zIndex: 9999,
+                    minWidth: "200px",
+                  }}
+                >
+                  {console.log("[v0] Dropdown content is rendering, dropdownOpen:", dropdownOpen)}
                   {userType === "public" && (
                     <>
                       <div className="px-2 py-1.5 text-sm font-medium text-slate-600">Select Identity:</div>
