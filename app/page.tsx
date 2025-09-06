@@ -28,8 +28,19 @@ function AuthPage() {
   const [mainView, setMainView] = useState<MainView>("events")
   const [isPublicView, setIsPublicView] = useState(false)
   const [showSessionProfile, setShowSessionProfile] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
   const { user, isAuthenticated, logout, userType } = useAuth()
   const { workspace, isSetup, loading: workspaceLoading } = useWorkspace()
+
+  const handleDropdownOpenChange = (open: boolean) => {
+    console.log("[v0] Dropdown open state changed:", open)
+    setDropdownOpen(open)
+  }
+
+  const handleMenuItemClick = (action: string) => {
+    console.log("[v0] Menu item clicked:", action)
+    setDropdownOpen(false)
+  }
 
   if (workspaceLoading) {
     return (
@@ -102,11 +113,15 @@ function AuthPage() {
                 )}
               </div>
 
-              <DropdownMenu>
+              <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     className="flex items-center space-x-2 rounded-full px-2 sm:px-4 w-full sm:w-auto justify-start"
+                    onClick={() => {
+                      console.log("[v0] Dropdown trigger clicked")
+                      setDropdownOpen(!dropdownOpen)
+                    }}
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-white" />
@@ -124,7 +139,7 @@ function AuthPage() {
                     <ChevronDown className="w-4 h-4 text-slate-400" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56" side="bottom" sideOffset={8}>
                   {userType === "public" && (
                     <>
                       <div className="px-2 py-1.5 text-sm font-medium text-slate-600">Select Identity:</div>
@@ -133,37 +148,68 @@ function AuthPage() {
                     </>
                   )}
                   {userType === "admin" && (
-                    <DropdownMenuItem onClick={() => setMainView("requests")}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleMenuItemClick("requests")
+                        setMainView("requests")
+                      }}
+                    >
                       <MessageSquare className="w-4 h-4 mr-2" />
                       My Requests
                     </DropdownMenuItem>
                   )}
                   {userType === "public" && (
-                    <DropdownMenuItem onClick={() => setShowSessionProfile(true)}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleMenuItemClick("profile")
+                        setShowSessionProfile(true)
+                      }}
+                    >
                       <User className="w-4 h-4 mr-2" />
                       Update Profile
                     </DropdownMenuItem>
                   )}
                   {userType === "admin" && (
-                    <DropdownMenuItem onClick={() => setMainView("settings")}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleMenuItemClick("settings")
+                        setMainView("settings")
+                      }}
+                    >
                       <User className="w-4 h-4 mr-2" />
                       Profile Settings
                     </DropdownMenuItem>
                   )}
                   {userType === "admin" && (
                     <>
-                      <DropdownMenuItem onClick={() => setMainView("settings")}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          handleMenuItemClick("admin-settings")
+                          setMainView("settings")
+                        }}
+                      >
                         <Shield className="w-4 h-4 mr-2" />
                         Admin Settings
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setIsPublicView(!isPublicView)}>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          handleMenuItemClick("toggle-view")
+                          setIsPublicView(!isPublicView)
+                        }}
+                      >
                         <Eye className="w-4 h-4 mr-2" />
                         {isPublicView ? "Switch to Admin View" : "Switch to Public View"}
                       </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-red-600">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      handleMenuItemClick("logout")
+                      logout()
+                    }}
+                    className="text-red-600"
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
