@@ -118,10 +118,6 @@ function AuthPage() {
                   <Button
                     variant="ghost"
                     className="flex items-center space-x-2 rounded-full px-2 sm:px-4 w-full sm:w-auto justify-start"
-                    onClick={() => {
-                      console.log("[v0] Dropdown trigger clicked")
-                      setDropdownOpen(!dropdownOpen)
-                    }}
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-white" />
