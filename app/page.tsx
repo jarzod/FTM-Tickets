@@ -28,19 +28,8 @@ function AuthPage() {
   const [mainView, setMainView] = useState<MainView>("events")
   const [isPublicView, setIsPublicView] = useState(false)
   const [showSessionProfile, setShowSessionProfile] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const { user, isAuthenticated, logout, userType } = useAuth()
   const { workspace, isSetup, loading: workspaceLoading } = useWorkspace()
-
-  const handleDropdownOpenChange = (open: boolean) => {
-    console.log("[v0] Dropdown open state changed:", open)
-    setDropdownOpen(open)
-  }
-
-  const handleMenuItemClick = (action: string) => {
-    console.log("[v0] Menu item clicked:", action)
-    setDropdownOpen(false)
-  }
 
   if (workspaceLoading) {
     return (
@@ -113,7 +102,7 @@ function AuthPage() {
                 )}
               </div>
 
-              <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -135,27 +124,7 @@ function AuthPage() {
                     <ChevronDown className="w-4 h-4 text-slate-400" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56 bg-white border shadow-lg z-50"
-                  side="bottom"
-                  sideOffset={8}
-                  onOpenAutoFocus={(e) => {
-                    console.log("[v0] Dropdown content opened and focused")
-                  }}
-                  onCloseAutoFocus={(e) => {
-                    console.log("[v0] Dropdown content closed")
-                  }}
-                  style={{
-                    backgroundColor: "white",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "8px",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                    zIndex: 9999,
-                    minWidth: "200px",
-                  }}
-                >
-                  {console.log("[v0] Dropdown content is rendering, dropdownOpen:", dropdownOpen)}
+                <DropdownMenuContent align="end" className="w-56">
                   {userType === "public" && (
                     <>
                       <div className="px-2 py-1.5 text-sm font-medium text-slate-600">Select Identity:</div>
@@ -164,68 +133,37 @@ function AuthPage() {
                     </>
                   )}
                   {userType === "admin" && (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        handleMenuItemClick("requests")
-                        setMainView("requests")
-                      }}
-                    >
+                    <DropdownMenuItem onClick={() => setMainView("requests")}>
                       <MessageSquare className="w-4 h-4 mr-2" />
                       My Requests
                     </DropdownMenuItem>
                   )}
                   {userType === "public" && (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        handleMenuItemClick("profile")
-                        setShowSessionProfile(true)
-                      }}
-                    >
+                    <DropdownMenuItem onClick={() => setShowSessionProfile(true)}>
                       <User className="w-4 h-4 mr-2" />
                       Update Profile
                     </DropdownMenuItem>
                   )}
                   {userType === "admin" && (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        handleMenuItemClick("settings")
-                        setMainView("settings")
-                      }}
-                    >
+                    <DropdownMenuItem onClick={() => setMainView("settings")}>
                       <User className="w-4 h-4 mr-2" />
                       Profile Settings
                     </DropdownMenuItem>
                   )}
                   {userType === "admin" && (
                     <>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          handleMenuItemClick("admin-settings")
-                          setMainView("settings")
-                        }}
-                      >
+                      <DropdownMenuItem onClick={() => setMainView("settings")}>
                         <Shield className="w-4 h-4 mr-2" />
                         Admin Settings
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          handleMenuItemClick("toggle-view")
-                          setIsPublicView(!isPublicView)
-                        }}
-                      >
+                      <DropdownMenuItem onClick={() => setIsPublicView(!isPublicView)}>
                         <Eye className="w-4 h-4 mr-2" />
                         {isPublicView ? "Switch to Admin View" : "Switch to Public View"}
                       </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      handleMenuItemClick("logout")
-                      logout()
-                    }}
-                    className="text-red-600"
-                  >
+                  <DropdownMenuItem onClick={logout} className="text-red-600">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
