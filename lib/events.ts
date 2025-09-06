@@ -99,10 +99,11 @@ export async function createEvent(
   const workspace =
     typeof window !== "undefined" ? JSON.parse(localStorage.getItem("ticket_scheduler_workspace") || "{}") : {}
 
+  const workspaceId = workspace.id || "default-workspace"
+
   const currentDate = new Date()
-  const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth() + 1
-  const seasonStartYear = currentMonth >= 9 ? currentYear : currentYear - 1
+  const seasonStartYear = currentMonth >= 9 ? currentDate.getFullYear() : currentDate.getFullYear() - 1
   const currentSeason = `${seasonStartYear}-${seasonStartYear + 1}`
 
   // Get configured seat types from admin ticket values for this team and season
@@ -165,15 +166,49 @@ export async function createEvent(
     updatedAt: new Date().toISOString(),
   }
 
+  const dbEventData = {
+    team_id: eventData.teamId,
+    opponent: eventData.opponent,
+    date: eventData.date,
+    time: eventData.time,
+    is_playoff: eventData.isPlayoff,
+    workspace_id: workspaceId,
+  }
+
   // Save to database
   try {
-    await createEventInDB(newEvent)
+    const createdDbEvent = await createEventInDB(dbEventData)
+    if (createdDbEvent) {
+      // Update the event ID to match the database-generated ID
+      newEvent.id = createdDbEvent.id
+
+      // Create tickets in database
+      for (const ticket of tickets) {
+        const dbTicketData = {
+          event_id: createdDbEvent.id,
+          seat_type_id: ticket.seatType,
+          custom_name: ticket.customName || null,
+          section: ticket.section || null,
+          row: ticket.row || null,
+          seat: ticket.seat || null,
+          value: ticket.value,
+          source: ticket.source || null,
+          assigned_to: ticket.assignedTo || null,
+          assignment_type: ticket.assignmentType || "",
+          status: ticket.status || "",
+          price: ticket.price,
+          confirmed: ticket.confirmed,
+          parking: ticket.parking || false,
+        }
+        await createTicketInDB(dbTicketData)
+      }
+    }
   } catch (error) {
     console.error("Error saving event to database:", error)
   }
 
   // Save to localStorage as a fallback
-  const events = getEvents()
+  const events = await getEvents()
   const updatedEvents = [...events, newEvent]
   setEvents(updatedEvents)
 
