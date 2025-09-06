@@ -74,19 +74,17 @@ function AuthPage() {
 
   if (isAuthenticated && user && workspace) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <header className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-background/95 backdrop-blur-sm shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-lg overflow-hidden">
+                  <img src="/ticket-logo.png" alt="Ticket Manager Logo" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Ticket Manager
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-600">by Fresh Tape Media</p>
+                  <h1 className="text-lg sm:text-xl font-bold text-foreground">Ticket Manager</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground">by Fresh Tape Media</p>
                 </div>
               </div>
 
@@ -130,9 +128,7 @@ function AuthPage() {
                     variant="ghost"
                     className="flex items-center space-x-2 rounded-full px-2 sm:px-4 w-full sm:w-auto justify-start"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
+                    
                     <div className="text-left flex-1 sm:flex-initial">
                       <p className="text-sm font-medium">
                         {userType === "public" && user.selectedTicketholder
@@ -141,9 +137,11 @@ function AuthPage() {
                             ? "Select Identity"
                             : user.name}
                       </p>
-                      <p className="text-xs text-slate-600">{userType === "admin" ? "Administrator" : "Public User"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {userType === "admin" ? "Administrator" : "Public User"}
+                      </p>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </Button>
                 }
               >
@@ -197,9 +195,7 @@ function AuthPage() {
           {userType === "public" || isPublicView ? (
             <div className="space-y-8">
               <div className="bg-white rounded-xl shadow-sm border p-6">
-                <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Available Events
-                </h2>
+                <h2 className="text-2xl font-bold mb-6 text-slate-700">Available Events</h2>
                 <EventsList isPublicView={true} />
               </div>
               <div className="bg-white rounded-xl shadow-sm border p-6">

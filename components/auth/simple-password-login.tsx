@@ -46,13 +46,11 @@ export function SimplePasswordLogin() {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center space-x-3 mb-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-lg overflow-hidden">
+            <img src="/ticket-logo.png" alt="Ticket Manager Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Ticket Manager
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold text-slate-700">Ticket Manager</CardTitle>
           </div>
         </div>
         <CardDescription className="text-slate-600">by Fresh Tape Media</CardDescription>
