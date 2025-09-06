@@ -14,6 +14,7 @@ export interface Ticket {
   status?: "tentative" | "confirmed" | "transferred"
   price: number
   confirmed: boolean
+  parking?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -203,6 +204,7 @@ export function updateTicketAssignment(
     status?: "tentative" | "confirmed" | "transferred"
     price?: number
     confirmed?: boolean
+    parking?: boolean // Added parking field to track $45 parking add-on
   },
 ): Ticket | null {
   const events = getEvents()
@@ -294,6 +296,8 @@ export function getEventStats(event: Event) {
       availableTickets: 0,
       soldTickets: 0,
       confirmedRevenue: 0,
+      parkingRevenue: 0,
+      totalRevenue: 0,
       isSoldOut: false,
     }
   }
@@ -309,12 +313,20 @@ export function getEventStats(event: Event) {
     .filter((t) => t.assignmentType === "sold" && t.status === "confirmed" && t.assignedTo)
     .reduce((sum, t) => sum + (t.price || 0), 0)
 
+  const parkingRevenue = event.tickets
+    .filter((t) => t.status === "confirmed" && t.assignedTo && t.parking)
+    .reduce((sum) => sum + 45, 0) // $45 per parking spot
+
+  const totalRevenue = confirmedRevenue + parkingRevenue
+
   return {
     totalTickets,
     assignedTickets,
     availableTickets,
     soldTickets,
     confirmedRevenue,
+    parkingRevenue,
+    totalRevenue,
     isSoldOut: availableTickets === 0,
   }
 }
@@ -346,6 +358,7 @@ export function addCustomTicket(
     assignmentType: "",
     price: 0,
     confirmed: false,
+    parking: false, // Default parking to false for custom tickets
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }

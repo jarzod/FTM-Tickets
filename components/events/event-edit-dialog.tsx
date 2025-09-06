@@ -224,7 +224,7 @@ export function EventEditDialog({ eventId, open, onOpenChange }: EventEditDialog
                 <div className="text-sm text-muted-foreground">Sold</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-semibold">${stats.confirmedRevenue.toFixed(2)}</div>
+                <div className="text-2xl font-semibold">${stats.totalRevenue.toFixed(2)}</div>
                 <div className="text-sm text-muted-foreground">Revenue</div>
               </div>
             </div>

@@ -123,6 +123,7 @@ export function EventsList({ isPublicView = false }: EventsListProps) {
         name: ticket.assignedTo || "Unknown",
         seat: ticket.seatNumber || ticket.seatType || "Unknown",
         assignmentType: ticket.assignmentType || "assigned",
+        parking: ticket.parking || false,
       }))
     } catch (error) {
       console.warn("[v0] Error getting assigned names:", error)
@@ -358,7 +359,30 @@ export function EventsList({ isPublicView = false }: EventsListProps) {
                                   </span>
                                 </div>
                                 <div className="text-right flex-1">
-                                  <span className="text-slate-900 font-normal">{assignment.name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-slate-900 font-normal">{assignment.name}</span>
+                                    {assignment.parking && (
+                                      <svg
+                                        className="h-3 w-3 text-slate-600"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
+                                        />
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M13 6h3l2 7H8l2-7h3z"
+                                        />
+                                      </svg>
+                                    )}
+                                  </div>
                                   <span
                                     className={`ml-1 text-xs px-1 py-0.5 rounded ${
                                       assignment.assignmentType === "sold"

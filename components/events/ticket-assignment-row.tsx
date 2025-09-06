@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { usePeople } from "@/hooks/use-people"
 import type { Ticket } from "@/lib/events"
-import { User, Building, Trash2 } from "lucide-react" // Import Trash2 icon
+import { User, Building, Trash2, Car } from "lucide-react" // Import Trash2 icon
 
 interface TicketAssignmentRowProps {
   ticket: Ticket
@@ -270,6 +271,18 @@ export function TicketAssignmentRow({
                 onChange={(e) => handlePriceChange(e.target.value)}
                 className="h-8 text-sm w-20 text-center"
                 placeholder={(ticket.value || 0).toString()}
+              />
+            </div>
+          )}
+
+          {/* Parking Checkbox - Only visible when assigned */}
+          {ticket.assignedTo && (
+            <div className="flex flex-col items-center">
+              <Car className="h-4 w-4 text-muted-foreground mb-1" />
+              <Checkbox
+                checked={ticket.parking || false}
+                onCheckedChange={(checked) => onUpdate(ticket.id, "parking", checked)}
+                className="h-4 w-4"
               />
             </div>
           )}
