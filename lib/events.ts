@@ -33,21 +33,36 @@ export interface Event {
 
 const EVENTS_STORAGE_KEY = "ticket_scheduler_events"
 
-// Get all events from localStorage
-export function getEvents(): Event[] {
-  if (typeof window === "undefined") return []
-
+// Get all events from localStorage or database
+export async function getEvents(): Promise<Event[]> {
+  // Try database first, fallback to localStorage
   try {
-    const stored = localStorage.getItem(EVENTS_STORAGE_KEY)
-    if (stored) {
-      const events = JSON.parse(stored)
-      return Array.isArray(events) ? events.filter(isValidEvent) : []
-    }
+    const dbEvents = await getEventsFromDB()
+    const eventsWithTickets = await Promise.all(
+      dbEvents.map(async (dbEvent) => {
+        const tickets = await getTicketsForEvent(dbEvent.id)
+        return convertDatabaseEventToApp(dbEvent, tickets)
+      }),
+    )
+    return eventsWithTickets
   } catch (error) {
-    console.error("Error reading events:", error)
-  }
+    console.error("Database error, falling back to localStorage:", error)
 
-  return []
+    // Fallback to localStorage
+    if (typeof window === "undefined") return []
+
+    try {
+      const stored = localStorage.getItem(EVENTS_STORAGE_KEY)
+      if (stored) {
+        const events = JSON.parse(stored)
+        return Array.isArray(events) ? events.filter(isValidEvent) : []
+      }
+    } catch (error) {
+      console.error("Error reading events:", error)
+    }
+
+    return []
+  }
 }
 
 function isValidEvent(event: any): event is Event {
@@ -75,10 +90,10 @@ export function setEvents(events: Event[]): void {
 }
 
 // Create a new event
-export function createEvent(
+export async function createEvent(
   eventData: Omit<Event, "id" | "tickets" | "createdAt" | "updatedAt">,
   seatTypes: { id: string; name: string; value: number }[], // Added value to seat types
-): Event {
+): Promise<Event> {
   const eventId = crypto.randomUUID()
 
   const workspace =
@@ -150,6 +165,14 @@ export function createEvent(
     updatedAt: new Date().toISOString(),
   }
 
+  // Save to database
+  try {
+    await createEventInDB(newEvent)
+  } catch (error) {
+    console.error("Error saving event to database:", error)
+  }
+
+  // Save to localStorage as a fallback
   const events = getEvents()
   const updatedEvents = [...events, newEvent]
   setEvents(updatedEvents)
@@ -158,8 +181,8 @@ export function createEvent(
 }
 
 // Update an event
-export function updateEvent(eventId: string, updates: Partial<Event>): Event | null {
-  const events = getEvents()
+export async function updateEvent(eventId: string, updates: Partial<Event>): Promise<Event | null> {
+  const events = await getEvents()
   const eventIndex = events.findIndex((e) => e.id === eventId)
 
   if (eventIndex === -1) return null
@@ -170,6 +193,14 @@ export function updateEvent(eventId: string, updates: Partial<Event>): Event | n
     updatedAt: new Date().toISOString(),
   }
 
+  // Update in database
+  try {
+    await createEventInDB(updatedEvent)
+  } catch (error) {
+    console.error("Error updating event in database:", error)
+  }
+
+  // Update in localStorage as a fallback
   events[eventIndex] = updatedEvent
   setEvents(events)
 
@@ -177,24 +208,32 @@ export function updateEvent(eventId: string, updates: Partial<Event>): Event | n
 }
 
 // Delete an event
-export function deleteEvent(eventId: string): boolean {
-  const events = getEvents()
+export async function deleteEvent(eventId: string): Promise<boolean> {
+  const events = await getEvents()
   const filteredEvents = events.filter((e) => e.id !== eventId)
 
   if (filteredEvents.length === events.length) return false
 
+  // Delete from database
+  try {
+    await createEventInDB(filteredEvents)
+  } catch (error) {
+    console.error("Error deleting event from database:", error)
+  }
+
+  // Delete from localStorage as a fallback
   setEvents(filteredEvents)
   return true
 }
 
 // Get event by ID
-export function getEventById(eventId: string): Event | null {
-  const events = getEvents()
+export async function getEventById(eventId: string): Promise<Event | null> {
+  const events = await getEvents()
   return events.find((e) => e.id === eventId) || null
 }
 
 // Update ticket assignment
-export function updateTicketAssignment(
+export async function updateTicketAssignment(
   eventId: string,
   ticketId: string,
   assignment: {
@@ -206,8 +245,8 @@ export function updateTicketAssignment(
     confirmed?: boolean
     parking?: boolean // Added parking field to track $45 parking add-on
   },
-): Ticket | null {
-  const events = getEvents()
+): Promise<Ticket | null> {
+  const events = await getEvents()
   const eventIndex = events.findIndex((e) => e.id === eventId)
 
   if (eventIndex === -1) return null
@@ -238,6 +277,14 @@ export function updateTicketAssignment(
   event.tickets[ticketIndex] = updatedTicket
   event.updatedAt = new Date().toISOString()
 
+  // Update in database
+  try {
+    await updateTicketInDB(updatedTicket)
+  } catch (error) {
+    console.error("Error updating ticket in database:", error)
+  }
+
+  // Update in localStorage as a fallback
   events[eventIndex] = event
   setEvents(events)
 
@@ -245,12 +292,12 @@ export function updateTicketAssignment(
 }
 
 // Get events with filtering
-export function getFilteredEvents(filters: {
+export async function getFilteredEvents(filters: {
   search?: string
   teamId?: string
   showPastEvents?: boolean
-}): Event[] {
-  const events = getEvents()
+}): Promise<Event[]> {
+  const events = await getEvents()
   const now = getMountainTime()
 
   return events.filter((event) => {
@@ -331,14 +378,14 @@ export function getEventStats(event: Event) {
   }
 }
 
-export function addCustomTicket(
+export async function addCustomTicket(
   eventId: string,
   section: string,
   row: string,
   seat: string,
   value: number,
-): Ticket | null {
-  const events = getEvents()
+): Promise<Ticket | null> {
+  const events = await getEvents()
   const eventIndex = events.findIndex((e) => e.id === eventId)
 
   if (eventIndex === -1) return null
@@ -366,6 +413,14 @@ export function addCustomTicket(
   event.tickets.push(newTicket)
   event.updatedAt = new Date().toISOString()
 
+  // Save to database
+  try {
+    await createTicketInDB(newTicket)
+  } catch (error) {
+    console.error("Error saving ticket to database:", error)
+  }
+
+  // Save to localStorage as a fallback
   events[eventIndex] = event
   setEvents(events)
 
@@ -373,8 +428,8 @@ export function addCustomTicket(
 }
 
 // Delete individual tickets from events
-export function deleteTicket(eventId: string, ticketId: string): boolean {
-  const events = getEvents()
+export async function deleteTicket(eventId: string, ticketId: string): Promise<boolean> {
+  const events = await getEvents()
   const eventIndex = events.findIndex((e) => e.id === eventId)
 
   if (eventIndex === -1) return false
@@ -387,6 +442,14 @@ export function deleteTicket(eventId: string, ticketId: string): boolean {
   event.tickets.splice(ticketIndex, 1)
   event.updatedAt = new Date().toISOString()
 
+  // Save to database
+  try {
+    await createEventInDB(event)
+  } catch (error) {
+    console.error("Error deleting ticket from database:", error)
+  }
+
+  // Save to localStorage as a fallback
   events[eventIndex] = event
   setEvents(events)
 
@@ -409,4 +472,53 @@ function isDaylightSavingTime(date: Date): boolean {
   const marchSecondSunday = new Date(year, 2, 8 + ((7 - new Date(year, 2, 8).getDay()) % 7))
   const novemberFirstSunday = new Date(year, 10, 1 + ((7 - new Date(year, 10, 1).getDay()) % 7))
   return date >= marchSecondSunday && date < novemberFirstSunday
+}
+
+// Neon database integration imports and functions
+import {
+  getEventsFromDB,
+  createEventInDB,
+  getTicketsForEvent,
+  createTicketInDB,
+  updateTicketInDB,
+  type DatabaseEvent,
+  type DatabaseTicket,
+} from "./database"
+
+// Function to convert database events to app format
+function convertDatabaseEventToApp(dbEvent: DatabaseEvent, tickets: DatabaseTicket[]): Event {
+  return {
+    id: dbEvent.id,
+    teamId: dbEvent.team_id,
+    opponent: dbEvent.opponent,
+    date: dbEvent.date,
+    time: dbEvent.time,
+    isPlayoff: dbEvent.is_playoff,
+    tickets: tickets.map(convertDatabaseTicketToApp),
+    createdAt: dbEvent.created_at,
+    updatedAt: dbEvent.updated_at,
+  }
+}
+
+// Function to convert database tickets to app format
+function convertDatabaseTicketToApp(dbTicket: DatabaseTicket): Ticket {
+  return {
+    id: dbTicket.id,
+    eventId: dbTicket.event_id,
+    seatType: dbTicket.seat_type_id,
+    customName: dbTicket.custom_name || undefined,
+    section: dbTicket.section || undefined,
+    row: dbTicket.row || undefined,
+    seat: dbTicket.seat || undefined,
+    value: dbTicket.value,
+    source: dbTicket.source || undefined,
+    assignedTo: dbTicket.assigned_to || undefined,
+    assignmentType: dbTicket.assignment_type as any,
+    status: dbTicket.status as any,
+    price: dbTicket.price,
+    confirmed: dbTicket.confirmed,
+    parking: dbTicket.parking,
+    createdAt: dbTicket.created_at,
+    updatedAt: dbTicket.updated_at,
+  }
 }
